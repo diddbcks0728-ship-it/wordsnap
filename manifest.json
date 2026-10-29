@@ -1,0 +1,29 @@
+{
+  "name": "WordSnap - 나만의 영어 단어장",
+  "short_name": "WordSnap",
+  "description": "사진 촬영으로 단어를 자동 추출하고 캘린더와 플래시카드로 학습하는 스마트 단어장",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f9fafb",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ]
+}
