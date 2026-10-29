@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>나만의 영어 연습장</title>
+<style>
+  :root {
+    --ink: #111827;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --paper: #ffffff;
+    --bg: #f9fafb;
+    --dark: #111827;
+    --dark-hover: #1f2937;
+    --gray-bg: #f3f4f6;
+    --gray-border: #d1d5db;
+    --shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.5; }
+  button, input, select, textarea { font: inherit; }
+  button { cursor: pointer; touch-action: manipulation; }
+  .shell { width: min(780px, 100%); margin: 0 auto; padding: 20px 16px 40px; }
+  
+  /* 헤더 */
+  header { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 850; font-size: 20px; letter-spacing: -.5px; cursor: pointer; }
+  .brand-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; color: #fff; background: var(--dark); font-size: 18px; font-weight: bold; }
+  .nav-btn { background: var(--gray-bg); border: 1px solid var(--line); padding: 7px 14px; border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--ink); }
+
+  /* 홈 화면 */
+  .home-hero { text-align: center; padding: 30px 10px 20px; }
+  .home-hero h1 { font-size: clamp(28px, 6vw, 36px); margin: 0 0 10px; letter-spacing: -1px; }
+  .home-hero p { color: var(--muted); margin: 0; font-size: 15px; }
+  .module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 30px; }
+  .module-card { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; justify-content: space-between; min-height: 180px; transition: transform 0.15s, border-color 0.15s; }
+  .module-card:hover { transform: translateY(-3px); border-color: var(--dark); }
+  .module-card.disabled { opacity: 0.5; pointer-events: none; background: #fafafa; }
+  .module-title { font-size: 18px; font-weight: 800; margin: 0 0 8px; }
+  .module-desc { font-size: 13px; color: var(--muted); margin: 0; }
+  .badge { display: inline-block; padding: 3px 8px; font-size: 11px; font-weight: 700; border-radius: 6px; background: var(--gray-bg); color: var(--muted); margin-bottom: 12px; width: fit-content; }
+
+  /* 기존 레이아웃 공통 */
+  .panel { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 20px; margin: 14px 0; box-shadow: var(--shadow); }
+  .section-head { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; font-size: 17px; font-weight: 800; }
+  .num { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--gray-bg); color: var(--dark); font-size: 13px; font-weight: 850; }
+  
+  .upload-area { display: flex; align-items: center; gap: 13px; padding: 16px; border: 1.5px dashed var(--gray-border); border-radius: 15px; background: #fafafa; }
+  .upload-icon { flex-shrink: 0; display: grid; place-items: center; width: 44px; height: 44px; background: var(--gray-bg); border-radius: 12px; font-size: 20px; }
+  .upload-text { min-width: 0; flex: 1; }
+  .upload-text strong { display: block; font-size: 14px; }
+  .upload-text small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .file-input { display: none; }
+  
+  .btn { border: 0; border-radius: 12px; padding: 11px 15px; font-weight: 750; font-size: 14px; transition: background .15s; }
+  .btn:active { opacity: 0.9; }
+  .primary { background: var(--dark); color: #fff; } .primary:hover { background: var(--dark-hover); }
+  .secondary { background: var(--gray-bg); color: var(--ink); border: 1px solid var(--line); } .secondary:hover { background: #e5e7eb; }
+  .outline { background: #fff; color: var(--ink); border: 1px solid var(--gray-border); }
+  .full { width: 100%; }
+  .row { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  .row > * { flex: 1; }
+  .status { font-size: 13px; color: var(--muted); margin: 12px 0 0; min-height: 20px; }
+  .status.error { color: #dc2626; }
+  .progress-track { height: 6px; border-radius: 99px; background: var(--gray-bg); overflow: hidden; margin-top: 10px; }
+  .progress-bar { height: 100%; width: 0; background: var(--dark); transition: width .2s; }
+
+  /* 단어 리스트 */
+  .word-list { display: grid; gap: 10px; }
+  .word-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) 70px minmax(0, 1fr) 34px; gap: 8px; align-items: center; }
+  .word-n { font-size: 12px; color: var(--muted); text-align: center; }
+  .word-input { min-width: 0; width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; outline: none; font-size: 14px; }
+  .pos-input { min-width: 0; width: 100%; padding: 10px 4px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--muted); font-size: 12px; }
+  .delete-btn { border: 0; background: var(--gray-bg); color: var(--muted); border-radius: 10px; height: 38px; font-size: 18px; }
+  .list-meta { font-size: 12px; color: var(--muted); margin-left: auto; }
+  .empty { text-align: center; border: 1px dashed var(--line); border-radius: 14px; padding: 24px 12px; color: var(--muted); font-size: 13px; }
+
+  /* 탭 메뉴 */
+  .tab-group { display: flex; gap: 6px; background: var(--gray-bg); padding: 4px; border-radius: 12px; margin-bottom: 16px; }
+  .tab-btn { flex: 1; border: 0; background: transparent; padding: 9px; border-radius: 8px; font-weight: 700; font-size: 13px; color: var(--muted); }
+  .tab-btn.active { background: #fff; color: var(--ink); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+
+  /* 캘린더 */
+  .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
+  .cal-day-head { font-size: 12px; font-weight: 700; color: var(--muted); padding: 6px 0; }
+  .cal-cell { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 4px; min-height: 52px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.1s; }
+  .cal-cell:hover { background: var(--gray-bg); }
+  .cal-cell.empty-cell { background: transparent; border: 0; cursor: default; }
+  .cal-cell.selected { border-color: var(--dark); border-width: 2px; }
+  .cal-date-num { font-size: 12px; font-weight: 700; }
+  .cal-count-badge { font-size: 10px; background: var(--dark); color: #fff; border-radius: 99px; padding: 1px 6px; font-weight: 700; }
+
+  /* 플래시카드 학습 */
+  .study-panel { padding: 0; overflow: hidden; }
+  .study-top { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .round-label { font-weight: 800; font-size: 13px; }
+  .counter { color: var(--muted); font-size: 12px; }
+  .study-progress { height: 4px; background: var(--gray-bg); }
+  .study-progress div { height: 100%; background: var(--dark); transition: width .2s; }
+  .flashcard { padding: 36px 20px 28px; text-align: center; min-height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .eyebrow { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); font-weight: 800; margin-bottom: 12px; }
+  .word-big { font-size: clamp(28px, 7vw, 42px); line-height: 1.2; font-weight: 850; word-break: break-all; }
+  .meaning { font-size: clamp(17px, 4vw, 22px); font-weight: 700; margin-top: 16px; color: #374151; word-break: break-all; }
+  .meaning.hidden { display: none; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 20px 22px; }
+  .answer-btn { min-height: 56px; border-radius: 14px; font-size: 15px; font-weight: 800; border: 1px solid var(--line); background: #fff; }
+  .answer-btn span { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-top: 2px; }
+  .answer-btn.known:hover { background: #f3f4f6; }
+  .answer-btn.again:hover { background: #f3f4f6; }
+  .study-footer { border-top: 1px solid var(--line); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .done { text-align: center; padding: 34px 20px 28px; }
+  .done-icon { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 20px; margin: 0 auto 15px; background: var(--gray-bg); color: var(--dark); font-size: 28px; font-weight: bold; }
+  
+
+  /* 작은 사용자 리뷰 창 */
+
+  .hidden-section { display: none !important; }
+  .divider { height: 1px; background: var(--line); margin: 16px 0; }
+
+  @media(max-width: 520px) {
+    .shell { padding: 14px 12px 32px; }
+    .panel { padding: 16px; border-radius: 16px; }
+    .word-row { grid-template-columns: 18px minmax(0, 1fr) 54px minmax(0, 1fr) 28px; gap: 4px; }
+    .word-input { font-size: 12px; padding: 8px 5px; }
+    .pos-input { font-size: 11px; padding: 8px 2px; }
+    .actions { padding: 0 14px 18px; gap: 8px; }
+    .cal-cell { min-height: 44px; padding: 4px 2px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="brand" id="goHomeBtn">
+      <div class="brand-icon">E</div>
+      <span>나만의 영어 연습장</span>
+    </div>
+    <button class="nav-btn hidden-section" id="headerHomeBtn">홈으로</button>
+  </header>
+
+  <!-- 1. 메인 홈 화면 -->
+  <section id="homeView">
+    <div class="home-hero">
+      <h1>나만의 영어 연습장</h1>
+      <p>단어 학습부터 본문 암기까지 한 곳에서 관리하세요.</p>
+    </div>
+    <div class="module-grid">
+      <div class="module-card" id="startVocabModuleBtn" style="cursor: pointer;">
+        <div>
+          <span class="badge">모듈 01</span>
+          <h2 class="module-title">단어 암기장</h2>
+          <p class="module-desc">사진 촬영 단어 추출, 캘린더 기반 날짜별/누적 복습 테스트 기능 제공</p>
+        </div>
+        <button class="btn primary full" style="margin-top: 20px;">단어 학습 시작하기 →</button>
+      </div>
+
+      <div class="module-card disabled">
+        <div>
+          <span class="badge">모듈 02 (준비 중)</span>
+          <h2 class="module-title">본문 암기장</h2>
+          <p class="module-desc">영어 지문 및 본문 통문장 암기 모듈이 곧 추가될 예정입니다.</p>
+        </div>
+        <button class="btn secondary full" style="margin-top: 20px;" disabled>이용 불가</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 단어 암기장 모듈 -->
+  <section id="vocabModuleView" class="hidden-section">
+    <div class="tab-group">
+      <button class="tab-btn active" id="tabManageBtn">단어 관리 & 학습</button>
+      <button class="tab-btn" id="tabCalendarBtn">복습 캘린더</button>
+    </div>
+
+    <!-- 단어 관리 & 기본 암기 탭 -->
+    <div id="vocabManageTab">
+      <div class="panel">
+        <h2 class="section-head"><span class="num">1</span> 사진 선택</h2>
+        <div class="upload-area">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text">
+            <strong id="fileName">단어장 사진 선택</strong>
+            <small>갤러리에서 여러 장의 사진 선택 가능</small>
+          </div>
+          <label class="btn secondary" for="imageInput">사진 선택</label>
+          <input class="file-input" id="imageInput" type="file" accept="image/*" multiple>
+        </div>
+        <div id="imagePreviewWrap" class="hidden-section" style="margin-top:12px">
+          <div id="imagePreviews" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px"></div>
+        </div>
+        <div class="row" style="margin-top:13px">
+          <button id="extractBtn" class="btn primary full" disabled>단어 추출하기</button>
+        </div>
+        <div id="ocrStatus" class="status" aria-live="polite"></div>
+        <div id="ocrProgressWrap" class="progress-track hidden-section"><div id="ocrProgress" class="progress-bar"></div></div>
+      </div>
+
+      <div class="panel">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <h2 class="section-head" style="margin:0"><span class="num">2</span> 단어 목록</h2>
+          <span id="listCount" class="list-meta">0개</span>
+        </div>
+        <div id="wordList" class="word-list"></div>
+        <div class="row" style="margin-top:13px">
+          <button id="addWordBtn" class="btn secondary">＋ 단어 추가</button>
+          <button id="clearWordsBtn" class="btn secondary">목록 비우기</button>
+        </div>
+        <div class="divider"></div>
+        <button id="startBtn" class="btn primary full">전체 단어 암기 시작 →</button>
+      </div>
+    </div>
+
+    <!-- 복습 캘린더 탭 -->
+    <div id="vocabCalendarTab" class="hidden-section">
+      <div class="panel">
+        <div class="calendar-header">
+          <button class="btn secondary" id="prevMonthBtn" style="padding: 6px 12px;">&lt;</button>
+          <strong id="calMonthLabel" style="font-size: 16px;">2026년 10월</strong>
+          <button class="btn secondary" id="nextMonthBtn" style="padding: 6px 12px;">&gt;</button>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </div>
+
+      <div class="panel hidden-section" id="selectedDatePanel">
+        <h3 id="selectedDateTitle" style="margin: 0 0 10px; font-size: 16px;">2026-10-29 학습 내역</h3>
+        <p id="selectedDateInfo" font-size: 13px; color: var(--muted); margin-bottom: 14px;>등록된 단어: 0개</p>
+        <div class="row">
+          <button class="btn primary" id="startDailyTestBtn">해당 날짜 단어 복습</button>
+          <button class="btn secondary" id="startCumulativeTestBtn">선택 날짜까지 누적 복습</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 플래시카드 암기/테스트 화면 -->
+  <section id="studyView" class="hidden-section">
+    <div class="panel study-panel">
+      <div class="study-top">
+        <span id="roundLabel" class="round-label">1회차</span>
+        <span id="counter" class="counter">1 / 10</span>
+      </div>
+      <div class="study-progress"><div id="studyProgress" style="width:0%"></div></div>
+      
+      <div id="cardArea">
+        <div class="flashcard">
+          <div class="eyebrow" id="cardEyebrow">WORD</div>
+          <div id="cardWord" class="word-big">abandon</div>
+          <div id="cardMeaning" class="meaning hidden">포기하다</div>
+          <button id="revealBtn" class="btn outline" style="margin-top:24px;">뜻 확인하기</button>
+        </div>
+        <div class="actions">
+          <button id="knownBtn" class="answer-btn known">✓ 외웠어요<span>목록에서 완료</span></button>
+          <button id="againBtn" class="answer-btn again">✕ 다시 보기<span>이번 회차 후 다시</span></button>
+        </div>
+      </div>
+
+      <div id="doneArea" class="done hidden-section">
+        <div class="done-icon">✓</div>
+        <h2>학습 완료!</h2>
+        <p id="doneText" style="color:var(--muted); font-size:14px; margin-bottom:20px;">모든 단어를 확인했습니다.</p>
+        <button id="exitStudyBtn" class="btn primary full">단어 암기장으로 돌아가기</button>
+      </div>
+      
+      <div class="study-footer">
+        <span id="masteredLabel">외운 단어 0개</span>
+        <button id="cancelStudyBtn" class="btn secondary" style="padding:6px 10px; font-size:12px">학습 종료</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+  // Supabase Dashboard에서 확인한 값을 여기에 입력하세요.
+  const SUPABASE_URL = 'https://xzhafwwrgulaojftevsg.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Mx3fnf7VENLla2ulNX6CpA_VyOfT9TO';
+  const supabaseClient = (window.supabase && SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('YOUR_') && !SUPABASE_PUBLISHABLE_KEY.includes('YOUR_'))
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY) : null;
+  let currentUserId = null;
+  let saveTimer = null;
+
+  const GEMINI_API_KEY = "AQ.Ab8RN6J1znxApbUfqAoJXlB9eikNrD4poH-QW5ayXTc6d0In5w";
+  const STORE_KEY = 'vocab-memory-words-v2';
+  const $ = id => document.getElementById(id);
+
+  let words = [];
+  let selectedImages = [];
+  let testQueue = [], retryQueue = [], currentIndex = 0, round = 1;
+  let mastered = new Set(), totalWords = 0;
+  let currentCalDate = new Date();
+  let selectedDateStr = null;
+
+  function getTodayStr() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function saveWords() {
+    // 클라우드 연결이 안 되더라도 단어장이 작동하도록 이 기기에 저장합니다.
+    // 익명 사용자 ID가 있으면 사용자별 로컬 백업도 유지합니다.
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(words));
+      if (currentUserId) localStorage.setItem(STORE_KEY + ':' + currentUserId, JSON.stringify(words));
+    } catch(e) {}
+    if (!currentUserId || !supabaseClient) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+      try {
+        const { error } = await supabaseClient
+          .from('vocab_data')
+          .upsert({ user_id: currentUserId, words, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+        if (error) console.warn('클라우드 저장을 사용할 수 없습니다. 이 기기에 저장했습니다.');
+      } catch (e) {
+        console.warn('클라우드 저장을 사용할 수 없습니다. 이 기기에 저장했습니다.');
+      }
+    }, 500);
+  }
+
+  async function loadWords() {
+    if (!supabaseClient) {
+      try {
+        const saved = localStorage.getItem(STORE_KEY);
+        words = saved ? JSON.parse(saved) : [];
+        if (!Array.isArray(words)) words = [];
+      } catch (e) { words = []; }
+      renderWords();
+      return;
+    }
+    try {
+      let { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!session) {
+        const result = await supabaseClient.auth.signInAnonymously();
+        if (result.error) throw result.error;
+        session = result.data.session;
+      }
+      currentUserId = session.user.id;
+      const { data, error } = await supabaseClient
+        .from('vocab_data')
+        .select('words')
+        .eq('user_id', currentUserId)
+        .maybeSingle();
+      if (error) throw error;
+      words = Array.isArray(data?.words) ? data.words.map((w, i) => ({
+        id: w.id || ('w_' + Date.now() + '_' + i),
+        english: w.english || '', meaning: w.meaning || '',
+        pos: w.pos || '', date: w.date || getTodayStr()
+      })) : [];
+      renderWords();
+    } catch (e) {
+      // 연결 오류 코드나 팝업을 띄우지 않고, 기기에 저장된 단어장으로 계속 실행합니다.
+      console.warn('클라우드 저장에 연결하지 못했습니다. 로컬 저장으로 전환합니다.');
+      currentUserId = null;
+      try {
+        const saved = localStorage.getItem(STORE_KEY);
+        words = saved ? JSON.parse(saved) : [];
+        if (!Array.isArray(words)) words = [];
+      } catch (err) { words = []; }
+      renderWords();
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function makeWord(english='', meaning='', pos='', date=getTodayStr()) {
+    return { id: 'w_' + Math.random().toString(36).substring(2, 9), english, meaning, pos, date };
+  }
+
+  /* 네비게이션 제어 */
+  function showView(viewId) {
+    ['homeView', 'vocabModuleView', 'studyView'].forEach(id => $(id).classList.add('hidden-section'));
+    $(viewId).classList.remove('hidden-section');
+    if(viewId === 'homeView') $('headerHomeBtn').classList.add('hidden-section');
+    else $('headerHomeBtn').classList.remove('hidden-section');
+  }
+
+  $('goHomeBtn').addEventListener('click', () => showView('homeView'));
+  $('headerHomeBtn').addEventListener('click', () => showView('homeView'));
+  $('startVocabModuleBtn').addEventListener('click', () => showView('vocabModuleView'));
+
+  /* 탭 제어 */
+  $('tabManageBtn').addEventListener('click', () => {
+    $('tabManageBtn').classList.add('active'); $('tabCalendarBtn').classList.remove('active');
+    $('vocabManageTab').classList.remove('hidden-section'); $('vocabCalendarTab').classList.add('hidden-section');
+  });
+  $('tabCalendarBtn').addEventListener('click', () => {
+    $('tabCalendarBtn').classList.add('active'); $('tabManageBtn').classList.remove('active');
+    $('vocabCalendarTab').classList.remove('hidden-section'); $('vocabManageTab').classList.add('hidden-section');
+    renderCalendar();
+  });
+
+  /* 단어 관리 */
+  function renderWords() {
+    const box = $('wordList');
+    $('listCount').textContent = words.length + '개';
+    if(!words.length) {
+      box.innerHTML = '<div class="empty">목록이 비어있습니다.<br>사진에서 단어를 추출하거나 직접 추가해 주세요.</div>';
+      saveWords();
+      return;
+    }
+    box.innerHTML = words.map((w, i) => `
+      <div class="word-row" data-id="${escapeHtml(w.id)}">
+        <span class="word-n">${i+1}</span>
+        <input class="word-input english-input" placeholder="단어" value="${escapeHtml(w.english)}">
+        <select class="pos-input pos-select">
+          <option value="" ${!w.pos?'selected':''}>품사</option>
+          <option value="n" ${w.pos==='n'?'selected':''}>n</option>
+          <option value="v" ${w.pos==='v'?'selected':''}>v</option>
+          <option value="adj" ${w.pos==='adj'?'selected':''}>adj</option>
+          <option value="adv" ${w.pos==='adv'?'selected':''}>adv</option>
+          <option value="prep" ${w.pos==='prep'?'selected':''}>prep</option>
+          <option value="phr" ${w.pos==='phr'?'selected':''}>phr</option>
+          <option value="other" ${w.pos==='other'?'selected':''}>etc</option>
+        </select>
+        <input class="word-input meaning-input" placeholder="뜻" value="${escapeHtml(w.meaning)}">
+        <button class="delete-btn" title="삭제">×</button>
+      </div>
+    `).join('');
+
+    box.querySelectorAll('.word-row').forEach(row => {
+      const id = row.dataset.id;
+      row.querySelector('.english-input').addEventListener('input', e => updateWord(id, 'english', e.target.value));
+      row.querySelector('.meaning-input').addEventListener('input', e => updateWord(id, 'meaning', e.target.value));
+      row.querySelector('.pos-select').addEventListener('change', e => updateWord(id, 'pos', e.target.value));
+      row.querySelector('.delete-btn').addEventListener('click', () => {
+        words = words.filter(w => w.id !== id);
+        renderWords();
+      });
+    });
+    saveWords();
+  }
+
+  function updateWord(id, field, value) {
+    const w = words.find(x => x.id === id);
+    if(w) { w[field] = value; saveWords(); }
+  }
+
+  /* 이미지 압축 (속도 개선) */
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 1024;
+        let width = img.width, height = img.height;
+        if(width > maxDim || height > maxDim) {
+          if(width > height) { height = Math.round((height * maxDim) / width); width = maxDim; }
+          else { width = Math.round((width * maxDim) / height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.68);
+        resolve({ mimeType: 'image/jpeg', data: dataUrl.split(',')[1] });
+      };
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  $('imageInput').addEventListener('change', e => {
+    const files = Array.from(e.target.files || []);
+    if(!files.length) return;
+    selectedImages = files;
+    $('fileName').textContent = files.length + '장의 사진 선택됨';
+    const previews = $('imagePreviews'); previews.innerHTML = '';
+    files.slice(0, 8).forEach((file, i) => {
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.style.cssText = 'width:100%;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--line)';
+      previews.append(img);
+    });
+    $('imagePreviewWrap').classList.remove('hidden-section');
+    $('extractBtn').disabled = false;
+    $('extractBtn').textContent = files.length + '장의 사진에서 단어 추출';
+  });
+
+  async function analyzeImage(file) {
+    const imageData = await compressImage(file);
+    const prompt = `영어 단어장 이미지입니다. 이미지 내 모든 영어 단어, 뜻, 품사를 추출하여 JSON 배열 형태로만 반환하세요.
+예시: [{"english": "apple", "meaning": "사과", "pos": "n"}]
+품사는 n, v, adj, adv, prep, phr, other 중 선택하세요.`;
+
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }, { inlineData: imageData }] }],
+        generationConfig: { responseMimeType: "application/json", temperature: 0, maxOutputTokens: 4096 }
+      })
+    });
+    if(!res.ok) throw new Error('단어 추출 중 오류 발생');
+    const data = await res.json();
+    return JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text || '[]');
+  }
+
+  /* 단어 병렬 추출 (속도 개선) */
+  $('extractBtn').addEventListener('click', async () => {
+    if(!selectedImages.length) return;
+    $('extractBtn').disabled = true;
+    $('extractBtn').textContent = '단어 분석 중...';
+    $('ocrProgressWrap').classList.remove('hidden-section');
+    $('ocrProgress').style.width = '30%';
+    $('ocrStatus').textContent = '이미지를 분석하고 있습니다...';
+
+    try {
+      const results = await Promise.all(selectedImages.map(file => analyzeImage(file)));
+      $('ocrProgress').style.width = '90%';
+      
+      let newCount = 0;
+      const today = getTodayStr();
+      results.flat().forEach(item => {
+        if(item.english && item.meaning) {
+          words.push(makeWord(item.english.trim(), item.meaning.trim(), item.pos || '', today));
+          newCount++;
+        }
+      });
+      renderWords();
+      $('ocrProgress').style.width = '100%';
+      $('ocrStatus').textContent = `${newCount}개의 단어가 성공적으로 추출되었습니다.`;
+    } catch(err) {
+      $('ocrStatus').textContent = '단어 추출 실패. 이미지 상태 및 네트워크를 확인해 주세요.';
+      $('ocrStatus').classList.add('error');
+    } finally {
+      $('extractBtn').disabled = false;
+      $('extractBtn').textContent = '단어 추출하기';
+    }
+  });
+
+  $('addWordBtn').addEventListener('click', () => {
+    words.push(makeWord());
+    renderWords();
+  });
+
+  $('clearWordsBtn').addEventListener('click', () => {
+    if(words.length && confirm('목록을 전체 삭제하시겠습니까?')) {
+      words = []; renderWords();
+    }
+  });
+
+  /* 캘린더 로직 */
+  function renderCalendar() {
+    const year = currentCalDate.getFullYear();
+    const month = currentCalDate.getMonth();
+    $('calMonthLabel').textContent = `${year}년 ${month + 1}월`;
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    // 날짜별 단어 수 집계
+    const counts = {};
+    words.forEach(w => {
+      counts[w.date] = (counts[w.date] || 0) + 1;
+    });
+
+    const grid = $('calendarGrid');
+    grid.innerHTML = ['일','월','화','수','목','금','토'].map(d => `<div class="cal-day-head">${d}</div>`).join('');
+
+    for(let i = 0; i < firstDay; i++) {
+      grid.innerHTML += `<div class="cal-cell empty-cell"></div>`;
+    }
+
+    for(let d = 1; d <= lastDate; d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const count = counts[dateStr] || 0;
+      const isSelected = selectedDateStr === dateStr;
+
+      const cell = document.createElement('div');
+      cell.className = `cal-cell ${isSelected ? 'selected' : ''}`;
+      cell.innerHTML = `
+        <span class="cal-date-num">${d}</span>
+        ${count > 0 ? `<span class="cal-count-badge">${count}</span>` : ''}
+      `;
+      cell.addEventListener('click', () => selectCalendarDate(dateStr, count));
+      grid.appendChild(cell);
+    }
+  }
+
+  $('prevMonthBtn').addEventListener('click', () => {
+    currentCalDate.setMonth(currentCalDate.getMonth() - 1);
+    renderCalendar();
+  });
+  $('nextMonthBtn').addEventListener('click', () => {
+    currentCalDate.setMonth(currentCalDate.getMonth() + 1);
+    renderCalendar();
+  });
+
+  function selectCalendarDate(dateStr, count) {
+    selectedDateStr = dateStr;
+    renderCalendar();
+    $('selectedDatePanel').classList.remove('hidden-section');
+    $('selectedDateTitle').textContent = `${dateStr} 학습 내역`;
+    $('selectedDateInfo').textContent = `등록된 단어: ${count}개`;
+  }
+
+  /* 학습 테스트 실행 */
+  function startTest(wordList) {
+    if(!wordList.length) { alert('테스트할 단어가 없습니다.'); return; }
+    testQueue = wordList.map(w => w.id);
+    retryQueue = []; currentIndex = 0; round = 1; mastered = new Set();
+    totalWords = testQueue.length;
+    
+    showView('studyView');
+    $('cardArea').classList.remove('hidden-section');
+    $('doneArea').classList.add('hidden-section');
+    renderCard();
+  }
+
+  $('startBtn').addEventListener('click', () => {
+    const valid = words.filter(w => w.english.trim() && w.meaning.trim());
+    startTest(valid);
+  });
+
+  $('startDailyTestBtn').addEventListener('click', () => {
+    const list = words.filter(w => w.date === selectedDateStr && w.english.trim());
+    startTest(list);
+  });
+
+  $('startCumulativeTestBtn').addEventListener('click', () => {
+    const list = words.filter(w => w.date <= selectedDateStr && w.english.trim());
+    startTest(list);
+  });
+
+  function currentWord() {
+    return words.find(w => w.id === testQueue[currentIndex]);
+  }
+
+  function renderCard() {
+    const w = currentWord();
+    if(!w) { finishRound(); return; }
+    $('cardEyebrow').textContent = w.pos || 'WORD';
+    $('cardWord').textContent = w.english;
+    $('cardMeaning').textContent = w.meaning;
+    $('cardMeaning').classList.add('hidden');
+    $('revealBtn').classList.remove('hidden-section');
+    $('roundLabel').textContent = `${round}회차 ${round > 1 ? '(오답 복습)' : ''}`;
+    $('counter').textContent = `${currentIndex + 1} / ${testQueue.length}`;
+    $('studyProgress').style.width = `${(currentIndex / testQueue.length) * 100}%`;
+    $('masteredLabel').textContent = `외운 단어 ${mastered.size} / ${totalWords}개`;
+  }
+
+  $('revealBtn').addEventListener('click', () => {
+    $('cardMeaning').classList.remove('hidden');
+    $('revealBtn').classList.add('hidden-section');
+  });
+
+  function mark(known) {
+    const w = currentWord(); if(!w) return;
+    if(known) mastered.add(w.id);
+    else retryQueue.push(w.id);
+    
+    currentIndex++;
+    if(currentIndex >= testQueue.length) finishRound();
+    else renderCard();
+  }
+
+  $('knownBtn').addEventListener('click', () => mark(true));
+  $('againBtn').addEventListener('click', () => mark(false));
+
+  function finishRound() {
+    if(retryQueue.length) {
+      testQueue = retryQueue; retryQueue = []; currentIndex = 0; round++;
+      renderCard();
+    } else {
+      $('cardArea').classList.add('hidden-section');
+      $('doneArea').classList.remove('hidden-section');
+    }
+  }
+
+  $('exitStudyBtn').addEventListener('click', () => showView('vocabModuleView'));
+  $('cancelStudyBtn').addEventListener('click', () => showView('vocabModuleView'));
+
+  loadWords();
+})();
+</script>
+</body>
+</html>
